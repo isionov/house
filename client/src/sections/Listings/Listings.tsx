@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { server, useQuery } from "../../lib/api";
+import { useQuery, useMutation } from "../../lib/api";
 import {
   ListingsData,
   DeleteListingData,
@@ -37,18 +37,13 @@ interface Props {
 export const Listings: React.FC<Props> = ({ title }) => {
   const { data, loading, error, refetch } = useQuery<ListingsData>(LISTINGS);
 
-  const deleteListings = async (id: string) => {
-    console.log("delete");
-    const { data } = await server.fetch<
-      DeleteListingData,
-      DeleteListingVariables
-    >({
-      query: DELETE_LISTINGS,
-      variables: {
-        id,
-      },
-    });
-    console.log(data);
+  const [
+    deleteListing,
+    { loading: deleteListingLoading, error: deleteListingError },
+  ] = useMutation<DeleteListingData, DeleteListingVariables>(DELETE_LISTINGS);
+
+  const handleDeleteListings = async (id: string) => {
+    await deleteListing({ id });
     refetch();
   };
 
@@ -58,7 +53,7 @@ export const Listings: React.FC<Props> = ({ title }) => {
         return (
           <li key={listing.id}>
             {listing.title}
-            <button onClick={() => deleteListings(listing.id)}>
+            <button onClick={() => handleDeleteListings(listing.id)}>
               delete listing
             </button>
           </li>
@@ -68,9 +63,18 @@ export const Listings: React.FC<Props> = ({ title }) => {
 
   if (loading) return <h2>Loading...</h2>;
   if (error) return <h2>Error</h2>;
+
+  const deleteListingLoadingMsg = deleteListingLoading ? (
+    <h4>Deletion on progress...</h4>
+  ) : null;
+  const deleteListingLoadingError = deleteListingError ? (
+    <h4>Deletion failed</h4>
+  ) : null;
+
   return (
     <div>
       <h2>{title}</h2>
+      {deleteListingLoadingMsg || deleteListingLoadingError}
       <ul>{listingsList}</ul>
     </div>
   );
