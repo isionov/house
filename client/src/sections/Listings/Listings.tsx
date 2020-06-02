@@ -1,12 +1,17 @@
 import React, { useState } from "react";
-import { useQuery, useMutation } from "../../lib/api";
-import {
-  ListingsData,
-  DeleteListingData,
-  DeleteListingVariables,
-} from "./types";
+// import { useQuery, useMutation } from "../../lib/api";
+// import {
+//   ListingsData,
+//   DeleteListingData,
+//   DeleteListingVariables,
+// } from "./types";
+import { Listings as ListingsData } from './__generated__/Listings';
+import { DeleteListing as DeleteListingData, DeleteListingVariables } from './__generated__/DeleteListing';
+import { useQuery, useMutation } from 'react-apollo';
+import { gql } from 'apollo-boost';
+import List from 'antd/es/list';
 
-const LISTINGS = `
+const LISTINGS = gql`
   query Listings {
     listings {
       id
@@ -22,7 +27,7 @@ const LISTINGS = `
   }
 `;
 
-const DELETE_LISTINGS = `
+const DELETE_LISTINGS = gql`
   mutation DeleteListing($id: ID!) {
     deleteListing(id: $id) {
       id
@@ -43,22 +48,22 @@ export const Listings: React.FC<Props> = ({ title }) => {
   ] = useMutation<DeleteListingData, DeleteListingVariables>(DELETE_LISTINGS);
 
   const handleDeleteListings = async (id: string) => {
-    await deleteListing({ id });
+    await deleteListing({ variables: { id } });
     refetch();
   };
 
   const listings = data ? data.listings : null;
   const listingsList = listings
     ? listings.map((listing) => {
-        return (
-          <li key={listing.id}>
-            {listing.title}
-            <button onClick={() => handleDeleteListings(listing.id)}>
-              delete listing
+      return (
+        <li key={listing.id}>
+          {listing.title}
+          <button onClick={() => handleDeleteListings(listing.id)}>
+            delete listing
             </button>
-          </li>
-        );
-      })
+        </li>
+      );
+    })
     : null;
 
   if (loading) return <h2>Loading...</h2>;
